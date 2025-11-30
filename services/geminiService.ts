@@ -36,18 +36,17 @@ const calculateLocalStats = (original: string, typed: string, timeTaken: number)
   const mistypedWords: string[] = [];
   const missedWords: string[] = [];
   const extraWords: string[] = [];
+  const charErrors: Record<string, number> = {};
   
-  // Basic linear comparison
-  // We align based on index. This is simple and fast.
+  // Word Level Analysis
   const len = Math.max(originalWords.length, typedWords.length);
-  
   for (let i = 0; i < len; i++) {
     const orig = originalWords[i];
     const user = typedWords[i];
     
     if (orig && user) {
         if (orig === user) {
-            correctChars += orig.length + 1; // +1 for the space (simplified logic)
+            correctChars += orig.length + 1; 
         } else {
             mistypedWords.push(`${user} (vs ${orig})`);
         }
@@ -58,22 +57,31 @@ const calculateLocalStats = (original: string, typed: string, timeTaken: number)
     }
   }
 
+  // Character Level Analysis (for Heatmap)
+  // We strictly compare index vs index for the raw string to find specific key misses
+  const minLen = Math.min(original.length, typed.length);
+  for(let i=0; i<minLen; i++) {
+      if (original[i] !== typed[i]) {
+          // If the user typed something else, blame the key they *should* have typed
+          // e.g. Expected 'a', typed 's'. The weak key is 'a' (target).
+          const targetChar = original[i].toLowerCase();
+          if (/[a-z0-9]/.test(targetChar)) {
+               charErrors[targetChar] = (charErrors[targetChar] || 0) + 1;
+          }
+      }
+  }
+
   // WPM Calculation
-  // Standard Formula: (All typed characters / 5) / (Time in minutes)
   const grossWPM = Math.round((typed.length / 5) / (timeTaken / 60));
-  // Net WPM usually subtracts uncorrected errors. We'll use a simplified penalty.
   const netWPM = Math.max(0, grossWPM - mistypedWords.length); 
   
   // Accuracy
-  // (Total Typed Words - Errors) / Total Typed Words
   const totalTypedWords = typedWords.length;
-  // Prevent divide by zero
   const accuracy = totalTypedWords > 0 
     ? Math.max(0, Math.round(((totalTypedWords - mistypedWords.length) / totalTypedWords) * 100))
     : 0;
 
   // Score (0-100)
-  // Weighted: 60% Accuracy, 40% Speed (capped at 100 WPM for score purposes)
   const speedScore = Math.min(netWPM, 100);
   const score = Math.round((accuracy * 0.6) + (speedScore * 0.4));
 
@@ -84,7 +92,8 @@ const calculateLocalStats = (original: string, typed: string, timeTaken: number)
     mistyped_words: mistypedWords,
     missed_words: missedWords,
     extra_words: extraWords,
-    errors: mistypedWords // Mapping for interface compatibility
+    errors: mistypedWords,
+    charErrors: charErrors
   };
 };
 
@@ -243,7 +252,6 @@ export const evaluateSession = async (
   const charSummary = getCharacterErrorSummary(originalText, userTypedText);
 
   // 2. Fetch AI Insights (Feedback Only)
-  // We don't ask AI to count words anymore, reducing latency by ~70%
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     

@@ -7,6 +7,7 @@ export interface EvaluationResult {
   mistyped_words: string[];
   missed_words: string[];
   extra_words: string[];
+  charErrors: Record<string, number>; // New: specific char error counts
   score: number;
   feedback_summary: string;
   improvement_suggestions: string[];
@@ -37,4 +38,14 @@ export interface ChartDataPoint {
   name: string;
   value: number;
   fullMark: number;
+}
+
+export interface DailyStats {
+  date: string; // YYYY-MM-DD
+  minutes: number;
+}
+
+export interface WeakKeyStats {
+  char: string;
+  count: number;
 }

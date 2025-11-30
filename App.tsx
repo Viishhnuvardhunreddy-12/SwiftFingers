@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { generatePracticeText, evaluateSession, analyzeMistakes, generateFloodText, generateBombText, generateShooterWords, generateRacingWords } from './services/geminiService';
+import { saveSessionData } from './services/historyService';
 import TypingArea from './components/TypingArea';
 import FloodGame from './components/FloodGame';
 import BombGame from './components/BombGame';
@@ -8,8 +9,9 @@ import ShooterGame from './components/ShooterGame';
 import DriftGame from './components/DriftGame';
 import ResultsView from './components/ResultsView';
 import ModeSelector from './components/ModeSelector';
+import AnalyticsModal from './components/AnalyticsModal';
 import { AppState, EvaluationResult, MistakeAnalysis, DifficultyMode, GameType } from './types';
-import { Keyboard, Loader2, ArrowLeft } from 'lucide-react';
+import { Keyboard, Loader2, ArrowLeft, BarChart2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -17,6 +19,7 @@ const App: React.FC = () => {
   const [evaluationResult, setEvaluationResult] = useState<EvaluationResult | null>(null);
   const [mistakeAnalysis, setMistakeAnalysis] = useState<MistakeAnalysis | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [showAnalytics, setShowAnalytics] = useState(false);
   
   // New state for difficulty and game mode
   const [difficulty, setDifficulty] = useState<DifficultyMode>('INTERMEDIATE');
@@ -86,17 +89,19 @@ const App: React.FC = () => {
     } else if (gameMode === 'DRIFT_RACING') {
         // Drift racing has no "complete text" condition in the same way, 
         // passing is based on survival.
-        setGameWon(true); // Default to win if completed without crash (crash sets game state internally)
-        // Check if crash happened by checking if length is very short vs time?
-        // Actually, DriftGame calls onComplete with full text if Won, partial if Lost.
+        setGameWon(true); 
         if (typedText.length < 20) {
-             setGameWon(false); // Rough heuristic if needed, but DriftGame handles its internal state display
+             setGameWon(false); 
         }
     }
 
     try {
       const result = await evaluateSession(practiceText, typedText, timeTaken);
       setEvaluationResult(result);
+      
+      // SAVE HISTORY for Analytics
+      saveSessionData(timeTaken, result.charErrors);
+
       setAppState(AppState.RESULTS);
     } catch (err) {
       console.error(err);
@@ -283,12 +288,22 @@ const App: React.FC = () => {
              {appState !== AppState.IDLE && (
                 <button 
                     onClick={handleReturnToMenu}
-                    className="text-xs font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1"
+                    className="text-xs font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1 mr-2"
                 >
                     <ArrowLeft size={14} />
                     Change Mode
                 </button>
              )}
+             
+             {/* Stats Button */}
+             <button
+                onClick={() => setShowAnalytics(true)}
+                className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 rounded-lg text-xs font-medium text-zinc-300 transition-all flex items-center gap-2"
+             >
+                <BarChart2 size={14} />
+                <span className="hidden sm:inline">Stats</span>
+             </button>
+
              <span className="px-3 py-1 bg-zinc-900/80 border border-zinc-800 rounded-full text-xs font-medium text-zinc-400 hidden sm:inline-block backdrop-blur-sm">
                 AI Powered Typing Assistant
              </span>
@@ -302,9 +317,12 @@ const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="fixed bottom-0 w-full py-4 text-center text-zinc-600 text-xs pointer-events-none">
+      <footer className="fixed bottom-0 w-full py-4 text-center text-zinc-600 text-xs pointer-events-none z-0">
         <p>Build v1.2 • Survival of the Fastest</p>
       </footer>
+
+      {/* Analytics Modal */}
+      <AnalyticsModal isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
     </div>
   );
 };

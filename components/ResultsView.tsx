@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { EvaluationResult, MistakeAnalysis, GameType } from '../types';
 import { ResponsiveContainer, RadialBarChart, RadialBar, Legend, Tooltip } from 'recharts';
-import { CheckCircle2, XCircle, TrendingUp, RefreshCcw, Activity, Sparkles, BrainCircuit, ArrowRight, Target, Trophy, Skull, Bomb, ShieldCheck, Crosshair, Flag } from 'lucide-react';
+import { CheckCircle2, TrendingUp, RefreshCcw, Activity, Sparkles, BrainCircuit, ArrowRight, Target, Trophy, Skull, Bomb, ShieldCheck, Crosshair, Flag } from 'lucide-react';
 import { GlowingEffect } from './ui/glowing-effect';
 
 interface ResultsViewProps {
@@ -26,6 +26,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     gameStatus,
     gameType = 'STANDARD'
 }) => {
+
   const chartData = [
     { name: 'WPM', uv: Math.min(result.wpm, 150), max: 150, fill: '#2dd4bf' },
     { name: 'Accuracy', uv: result.accuracy, max: 100, fill: '#818cf8' },
@@ -88,37 +89,41 @@ const ResultsView: React.FC<ResultsViewProps> = ({
       {gameStatus && (
         <div className="relative rounded-3xl mb-8">
             <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={3} variant={gameStatus === 'WON' ? 'default' : 'default'} />
-            <div className={`relative z-10 bg-slate-900/50 border backdrop-blur-md rounded-3xl overflow-hidden shadow-xl ${gameStatus === 'WON' ? 'border-green-500/30' : 'border-red-500/30'}`}>
-                <div className="flex items-center justify-between p-6 w-full">
-                    <div className="flex items-center gap-4">
-                        <div className={`p-4 rounded-full ${gameStatus === 'WON' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                            {gameStatus === 'WON' ? (
-                                gameType === 'BOMB_DEFUSE' ? <ShieldCheck className="w-8 h-8 text-green-400" /> : 
-                                gameType === 'STICKMAN_SHOOTER' ? <Crosshair className="w-8 h-8 text-green-400" /> :
-                                gameType === 'DRIFT_RACING' ? <Flag className="w-8 h-8 text-green-400" /> :
-                                <Trophy className="w-8 h-8 text-green-400" />
-                            ) : (
-                                gameType === 'BOMB_DEFUSE' ? <Bomb className="w-8 h-8 text-red-400" /> : 
-                                gameType === 'STICKMAN_SHOOTER' ? <Skull className="w-8 h-8 text-red-400" /> :
-                                <Skull className="w-8 h-8 text-red-400" />
-                            )}
+            <div className="relative z-10">
+                <div className={`bg-slate-900/50 border backdrop-blur-md rounded-3xl overflow-hidden shadow-xl ${gameStatus === 'WON' ? 'border-green-500/30' : 'border-red-500/30'}`}>
+                    <div className="flex items-center justify-between p-6 w-full">
+                        <div className="flex items-center gap-4">
+                            <div className={`p-4 rounded-full ${gameStatus === 'WON' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                                {gameStatus === 'WON' ? (
+                                    gameType === 'BOMB_DEFUSE' ? <ShieldCheck className="w-8 h-8 text-green-400" /> : 
+                                    gameType === 'STICKMAN_SHOOTER' ? <Crosshair className="w-8 h-8 text-green-400" /> :
+                                    gameType === 'DRIFT_RACING' ? <Flag className="w-8 h-8 text-green-400" /> :
+                                    <Trophy className="w-8 h-8 text-green-400" />
+                                ) : (
+                                    gameType === 'BOMB_DEFUSE' ? <Bomb className="w-8 h-8 text-red-400" /> : 
+                                    gameType === 'STICKMAN_SHOOTER' ? <Skull className="w-8 h-8 text-red-400" /> :
+                                    <Skull className="w-8 h-8 text-red-400" />
+                                )}
+                            </div>
+                            <div>
+                                <h2 className={`text-3xl font-bold ${gameStatus === 'WON' ? 'text-green-100' : 'text-red-100'}`}>
+                                    {gameStatus === 'WON' ? gameText.wonTitle : gameText.lostTitle}
+                                </h2>
+                                <p className="text-slate-400">
+                                    {gameStatus === 'WON' ? gameText.wonDesc : gameText.lostDesc}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className={`text-3xl font-bold ${gameStatus === 'WON' ? 'text-green-100' : 'text-red-100'}`}>
-                                {gameStatus === 'WON' ? gameText.wonTitle : gameText.lostTitle}
-                            </h2>
-                            <p className="text-slate-400">
-                                {gameStatus === 'WON' ? gameText.wonDesc : gameText.lostDesc}
-                            </p>
+                        <div className="hidden md:block text-5xl font-mono font-bold text-white/10">
+                            {gameStatus === 'WON' ? gameText.wonBadge : gameText.lostBadge}
                         </div>
-                    </div>
-                    <div className="hidden md:block text-5xl font-mono font-bold text-white/10">
-                        {gameStatus === 'WON' ? gameText.wonBadge : gameText.lostBadge}
                     </div>
                 </div>
             </div>
         </div>
       )}
+
+      {/* Analytics charts have been moved to the separate Analytics Modal accessible via the Header */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         
@@ -132,7 +137,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
                     </div>
                     <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                         <TrendingUp className="text-primary-400" />
-                        Performance Analysis
+                        Session Performance
                     </h2>
                     
                     <div className="h-64 w-full">
@@ -195,63 +200,6 @@ const ResultsView: React.FC<ResultsViewProps> = ({
                 </div>
             </div>
         </div>
-      </div>
-
-      {/* Detailed Errors */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-         <div className="relative rounded-3xl">
-             <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={3} />
-             <div className="relative z-10 bg-slate-900/50 border border-slate-800 backdrop-blur-md rounded-3xl overflow-hidden shadow-xl h-full">
-                 <div className="p-5 w-full">
-                    <h3 className="text-red-400 font-semibold mb-3 flex items-center gap-2">
-                        <XCircle size={16} /> Mistyped
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                        {result.mistyped_words.length > 0 ? (
-                            result.mistyped_words.map((w, i) => (
-                                <span key={i} className="px-2 py-1 bg-red-900/20 text-red-300 text-xs rounded border border-red-900/50">{w}</span>
-                            ))
-                        ) : <span className="text-slate-500 text-sm italic">None! Perfect!</span>}
-                    </div>
-                 </div>
-             </div>
-         </div>
-         
-         <div className="relative rounded-3xl">
-             <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={3} />
-             <div className="relative z-10 bg-slate-900/50 border border-slate-800 backdrop-blur-md rounded-3xl overflow-hidden shadow-xl h-full">
-                 <div className="p-5 w-full">
-                    <h3 className="text-amber-400 font-semibold mb-3 flex items-center gap-2">
-                        <Activity size={16} /> Missed
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                        {result.missed_words.length > 0 ? (
-                            result.missed_words.map((w, i) => (
-                                <span key={i} className="px-2 py-1 bg-amber-900/20 text-amber-300 text-xs rounded border border-amber-900/50">{w}</span>
-                            ))
-                        ) : <span className="text-slate-500 text-sm italic">None</span>}
-                    </div>
-                 </div>
-             </div>
-         </div>
-
-         <div className="relative rounded-3xl">
-             <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={3} />
-             <div className="relative z-10 bg-slate-900/50 border border-slate-800 backdrop-blur-md rounded-3xl overflow-hidden shadow-xl h-full">
-                 <div className="p-5 w-full">
-                    <h3 className="text-blue-400 font-semibold mb-3 flex items-center gap-2">
-                        <Activity size={16} /> Extra
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                        {result.extra_words.length > 0 ? (
-                            result.extra_words.map((w, i) => (
-                                <span key={i} className="px-2 py-1 bg-blue-900/20 text-blue-300 text-xs rounded border border-blue-900/50">{w}</span>
-                            ))
-                        ) : <span className="text-slate-500 text-sm italic">None</span>}
-                    </div>
-                 </div>
-             </div>
-         </div>
       </div>
 
       {/* Feature 2: AI Mistake Analyzer */}
