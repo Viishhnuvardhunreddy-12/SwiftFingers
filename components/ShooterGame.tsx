@@ -45,6 +45,16 @@ const ShooterGame: React.FC<ShooterGameProps> = ({ originalText, onComplete, onR
   const [activeWords, setActiveWords] = useState<ActiveWord[]>([]);
   const [gameState, setGameState] = useState<'IDLE' | 'PLAYING' | 'WON' | 'LOST'>('IDLE');
   const [laser, setLaser] = useState<{x: number, y: number} | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileInput, setMobileInput] = useState('');
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   
   // Visual Stats State (Throttled updates for performance)
   const [uiMetrics, setUiMetrics] = useState<GameMetrics & { timeSurvived: number }>({
@@ -156,6 +166,27 @@ const ShooterGame: React.FC<ShooterGameProps> = ({ originalText, onComplete, onR
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array = stable listener
 
+  // Mobile input handler
+  const handleMobileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Process each new character typed
+    if (val.length > mobileInput.length) {
+      const newChar = val[val.length - 1];
+      if (gameStateRef.current === 'IDLE') {
+        startGame();
+        processInput(newChar);
+      } else if (gameStateRef.current === 'PLAYING') {
+        processInput(newChar);
+      }
+    }
+    // Keep input short to avoid lag — clear after space or when word matched
+    if (val.endsWith(' ') || val.length > 20) {
+      setMobileInput('');
+    } else {
+      setMobileInput(val);
+    }
+  };
+
   const startGame = () => {
     setGameState('PLAYING');
     gameStateRef.current = 'PLAYING';
@@ -171,6 +202,9 @@ const ShooterGame: React.FC<ShooterGameProps> = ({ originalText, onComplete, onR
     // Start loop
     if (requestRef.current) cancelAnimationFrame(requestRef.current);
     requestRef.current = requestAnimationFrame(gameLoop);
+    
+    // Focus mobile input if on mobile
+    setTimeout(() => mobileInputRef.current?.focus(), 50);
   };
 
   const spawnWords = (count: number) => {
@@ -607,6 +641,27 @@ const ShooterGame: React.FC<ShooterGameProps> = ({ originalText, onComplete, onR
             animation: laser-fade 0.2s ease-out forwards;
         }
       `}</style>
+
+      {/* Mobile input */}
+      {isMobile && (
+        <div className="w-full mt-3 flex flex-col items-center gap-1">
+          <p className="text-slate-500 text-xs">Type the falling words</p>
+          <input
+            ref={mobileInputRef}
+            type="text"
+            inputMode="text"
+            enterKeyHint="go"
+            className="w-full px-4 py-3 bg-slate-900 border-2 border-indigo-800 focus:border-indigo-400 rounded-2xl text-white font-mono text-base outline-none transition-colors placeholder:text-slate-600 text-center"
+            value={mobileInput}
+            onChange={handleMobileInput}
+            placeholder="Tap here to shoot..."
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+          />
+        </div>
+      )}
     </div>
   );
 };

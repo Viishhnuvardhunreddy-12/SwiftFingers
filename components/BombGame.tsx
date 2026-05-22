@@ -16,18 +16,16 @@ const BombGame: React.FC<BombGameProps> = ({ originalText, onComplete, onRestart
   const [gameState, setGameState] = useState<'IDLE' | 'PLAYING' | 'DEFUSED' | 'EXPLODED'>('IDLE');
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [words, setWords] = useState<string[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef<number | null>(null);
 
-  // Initialize words
   useEffect(() => {
-    setWords(originalText.split(' '));
-  }, [originalText]);
-
-  // Focus input on mount
-  useEffect(() => {
-    inputRef.current?.focus();
+    const check = () => setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   // Timer Logic
@@ -219,19 +217,36 @@ const BombGame: React.FC<BombGameProps> = ({ originalText, onComplete, onRestart
 
       </div>
 
-      {/* Hidden Input */}
-      <input
-        ref={inputRef}
-        type="text"
-        className="absolute inset-0 opacity-0 cursor-default"
-        value={input}
-        onChange={handleChange}
-        autoFocus
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck="false"
-      />
+      {/* Input — hidden on desktop, visible on mobile */}
+      {isMobile ? (
+        <input
+          ref={inputRef}
+          type="text"
+          inputMode="text"
+          enterKeyHint="next"
+          className="w-full max-w-xl mt-4 px-4 py-3 bg-slate-900 border-2 border-amber-800 focus:border-amber-400 rounded-2xl text-white font-mono text-base outline-none transition-colors placeholder:text-slate-600 text-center"
+          value={input}
+          onChange={handleChange}
+          placeholder="Tap here to type..."
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+        />
+      ) : (
+        <input
+          ref={inputRef}
+          type="text"
+          className="absolute inset-0 opacity-0 cursor-default"
+          value={input}
+          onChange={handleChange}
+          autoFocus
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+        />
+      )}
 
       <style>{`
         .animate-shake {

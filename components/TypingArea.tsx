@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Timer, RefreshCw, AlertCircle } from 'lucide-react';
+import { Timer, RefreshCw, AlertCircle, Keyboard } from 'lucide-react';
 import { GlowingEffect } from './ui/glowing-effect';
 
 interface TypingAreaProps {
@@ -16,7 +16,16 @@ const TypingArea: React.FC<TypingAreaProps> = ({ originalText, onComplete, onRes
   const [timeLeft, setTimeLeft] = useState(60);
   const [isActive, setIsActive] = useState(false);
   const [words, setWords] = useState<string[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // Split original text into words for rendering
   useEffect(() => {
@@ -133,43 +142,75 @@ const TypingArea: React.FC<TypingAreaProps> = ({ originalText, onComplete, onRes
       <div className="relative rounded-3xl p-1">
         <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={3} />
         <div className="relative bg-slate-900/50 border border-slate-800 backdrop-blur-md rounded-3xl overflow-hidden p-0 shadow-2xl z-10">
-            <div className="relative font-mono text-2xl leading-relaxed break-words p-8 min-h-[300px]" onClick={() => inputRef.current?.focus()}>
-                
+            <div
+              className="relative font-mono text-xl md:text-2xl leading-relaxed break-words p-6 md:p-8 min-h-[200px] md:min-h-[300px]"
+              onClick={() => inputRef.current?.focus()}
+            >
                 {/* The Visual Text */}
                 <div className="pointer-events-none whitespace-pre-wrap break-words">
                     {renderText()}
                 </div>
 
-                {/* Hidden Input for Logic */}
-                <input
-                ref={inputRef}
-                type="text"
-                className="absolute inset-0 opacity-0 cursor-default"
-                value={input}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                autoFocus
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-                />
+                {/* Hidden Input — desktop only (mobile uses visible input below) */}
+                {!isMobile && (
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    className="absolute inset-0 opacity-0 cursor-default"
+                    value={input}
+                    onChange={handleChange}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                  />
+                )}
 
-                {/* Overlay if not started - subtle hint only, no blur */}
+                {/* Hint */}
                 {!isActive && input.length === 0 && (
                 <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center pointer-events-none">
                     <div className="text-slate-500 flex items-center space-x-2 animate-pulse bg-black/40 px-4 py-1.5 rounded-full text-sm">
                         <AlertCircle className="w-4 h-4" />
-                        <span>Start typing to begin</span>
+                        <span>{isMobile ? 'Tap the input below to start' : 'Start typing to begin'}</span>
                     </div>
                 </div>
                 )}
             </div>
         </div>
       </div>
-      
-      <div className="mt-8 flex justify-center text-slate-500 text-sm">
-        <p>Press <span className="px-2 py-1 bg-slate-800 rounded text-slate-300">Tab</span> to restart quickly</p>
+
+      {/* Mobile visible input */}
+      {isMobile && (
+        <div className="mt-4 w-full flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2 text-slate-500 text-xs">
+            <Keyboard className="w-3 h-3" />
+            <span>Tap below to open keyboard</span>
+          </div>
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="text"
+            enterKeyHint="next"
+            className="w-full px-4 py-3 bg-slate-900 border-2 border-slate-700 focus:border-primary-400 rounded-2xl text-white font-mono text-base outline-none transition-colors placeholder:text-slate-600 text-center"
+            value={input}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Type here..."
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+          />
+        </div>
+      )}
+
+      <div className="mt-6 flex justify-center text-slate-500 text-sm">
+        {isMobile
+          ? <p>Tap the input box above to open your keyboard</p>
+          : <p>Press <span className="px-2 py-1 bg-slate-800 rounded text-slate-300">Tab</span> to restart quickly</p>
+        }
       </div>
     </div>
   );

@@ -14,12 +14,15 @@ const FloodGame: React.FC<FloodGameProps> = ({ originalText, onComplete, onResta
   const [timeLeft, setTimeLeft] = useState(60);
   const [isActive, setIsActive] = useState(false);
   const [gameState, setGameState] = useState<'IDLE' | 'PLAYING' | 'WON' | 'LOST'>('IDLE');
+  const [isMobile, setIsMobile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef<number | null>(null);
 
-  // Focus input on mount
   useEffect(() => {
-    inputRef.current?.focus();
+    const check = () => setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   // Timer & Water Logic
@@ -182,6 +185,24 @@ const FloodGame: React.FC<FloodGameProps> = ({ originalText, onComplete, onResta
                 Exit Simulation
             </button>
         </div>
+
+        {/* Mobile visible input */}
+        {isMobile && (
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="text"
+            enterKeyHint="next"
+            className="w-full px-4 py-3 bg-slate-900 border-2 border-blue-800 focus:border-blue-400 rounded-2xl text-white font-mono text-base outline-none transition-colors placeholder:text-slate-600 text-center"
+            value={input}
+            onChange={handleChange}
+            placeholder="Tap here to type..."
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+          />
+        )}
       </div>
 
       {/* RIGHT PANEL: The Tank Visual */}
@@ -311,8 +332,9 @@ const FloodGame: React.FC<FloodGameProps> = ({ originalText, onComplete, onResta
            </div>
       </div>
 
-      {/* Hidden Input */}
-      <input
+      {/* Hidden Input — desktop only */}
+      {!isMobile && (
+        <input
           ref={inputRef}
           type="text"
           className="absolute inset-0 opacity-0 cursor-default"
@@ -322,8 +344,9 @@ const FloodGame: React.FC<FloodGameProps> = ({ originalText, onComplete, onResta
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
-          spellCheck="false"
+          spellCheck={false}
         />
+      )}
 
       <style>{`
         .clip-path-spike {
