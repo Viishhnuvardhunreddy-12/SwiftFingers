@@ -1,0 +1,108 @@
+/* Custom CSS to hide phone number field in Clerk forms */
+
+/* Hide phone number field in sign-up form */
+.cl-formFieldRow[data-field="phoneNumber"],
+.cl-formFieldRow__phoneNumber,
+[data-localization-key="formFieldLabel__phoneNumber"],
+input[name="phoneNumber"],
+input[type="tel"] {
+  display: none !important;
+}
+
+/* Hide any parent containers of phone input */
+.cl-phoneInputBox {
+  display: none !important;
+}
+
+/* Adjust spacing after hiding phone field */
+.cl-formFieldRow:has(input[type="tel"]) {
+  display: none !important;
+}
+
+/* Profile Picture Upload Button Styling */
+/* Make upload button visible and styled */
+.cl-avatarImageActionsUpload,
+.cl-avatarImageActionsUpload button,
+button[data-localization-key="userProfile.profilePage.imageFormDestructiveActionSubtitle"],
+button[aria-label="Upload"],
+.cl-avatarBox button {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #2dd4bf !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s !important;
+}
+
+.cl-avatarImageActionsUpload:hover,
+.cl-avatarImageActionsUpload button:hover {
+  background-color: #e5e5e5 !important;
+  transform: scale(1.05) !important;
+}
+
+/* Remove button styling */
+.cl-avatarImageActionsRemove,
+.cl-avatarImageActionsRemove button {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+  border: 2px solid #dc2626 !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+}
+
+.cl-avatarImageActionsRemove:hover,
+.cl-avatarImageActionsRemove button:hover {
+  background-color: #dc2626 !important;
+}
+
+/* Avatar container styling */
+.cl-avatarBox {
+  border: none !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+}
+
+/* Profile page background */
+.cl-profilePage,
+.cl-userProfile-root {
+  background-color: #09090b !important;
+  color: #ffffff !important;
+}
+
+/* Profile section titles */
+.cl-profileSectionTitle,
+.cl-profileSectionTitleText {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Profile section content */
+.cl-profileSectionContent {
+  color: #a1a1aa !important;
+}
+
+/* Save button in profile */
+.cl-formButtonPrimary {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: #e5e5e5 !important;
+}
+
+/* Cancel button */
+.cl-formButtonReset {
+  background-color: transparent !important;
+  color: #2dd4bf !important;
+  border: 2px solid #2dd4bf !important;
+  font-weight: 600 !important;
+}
+
+.cl-formButtonReset:hover {
+  background-color: #2dd4bf !important;
+  color: #000000 !important;
+}
